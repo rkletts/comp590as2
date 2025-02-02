@@ -1,51 +1,53 @@
-import java.util.concurrent.locks.Lock;
+import java.util.Random;
 
-public class Philosopher implements Runnable {
-    private final int id;
-    private final Lock leftFork;
-    private final Lock rightFork;
 
-    public Philosopher(int id, Lock leftFork, Lock rightFork) {
-        this.id = id;
-        this.leftFork = leftFork;
-        this.rightFork = rightFork;
+class Philosopher extends Thread {
+    private int id;
+    private static int counter = 0;
+    private Forks fork;
+    private Random randomTime = new Random();
+
+
+    public Philosopher(Forks fork) {
+        super();
+        this.fork = fork;
+        id = counter + 1;
+        counter++;
+
     }
 
-    private void think() throws InterruptedException {
-        System.out.println("Philosopher " + id + " is thinking...");
-        Thread.sleep((int) (Math.random() * 1000)); // Simulate thinking time
-    }
 
-    private void eat() throws InterruptedException {
-        System.out.println("Philosopher " + id + " is eating...");
-        Thread.sleep((int) (Math.random() * 1000)); // Simulate eating time
-    }
-
-    @Override
-    public void run() {
+    private void eating() {
+        int eatingDuration = randomTime.nextInt(1000) + 500;
+        System.out.printf("Philosopher %d is Eating. \n", id);
         try {
-            while (true) {
-                // Think
-                think();
-
-                // Pick up forks
-                leftFork.lock();
-                System.out.println("Philosopher " + id + " picked up left fork.");
-                rightFork.lock();
-                System.out.println("Philosopher " + id + " picked up right fork.");
-
-                // Eat
-                eat();
-
-                // Put down forks
-                rightFork.unlock();
-                System.out.println("Philosopher " + id + " put down right fork.");
-                leftFork.unlock();
-                System.out.println("Philosopher " + id + " put down left fork.");
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            System.out.println("Philosopher " + id + " was interrupted.");
+            Thread.sleep(eatingDuration);
         }
+        catch (InterruptedException e) {
+
+        }
+
+    }
+
+    private void thinking() {
+        int thinkDuration = randomTime.nextInt(1500) + 500;
+        System.out.printf("Philosopher %d is Thinking. \n", id);
+        try {
+            Thread.sleep(thinkDuration);
+        }
+        catch (InterruptedException e) {
+
+        }
+
+    }
+
+    public void run() {
+        while (true) {
+            thinking();
+            fork.pickUpFork(id - 1);
+            eating();
+            fork.putDownFork(id - 1);
+        }
+
     }
 }
